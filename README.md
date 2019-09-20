@@ -49,7 +49,7 @@ example versions:
   pkg-config-0.29.1-1
  ```
 
-for Windows+Cygwin recommended "-no-undefined" of secp256k1 :
+for secp256k1 under Windows+Cygwin recommended "-no-undefined" : 
 ```
 ./autogen.sh
 ./configure --enable-endomorphism --enable-ecmult-static-precomputation  --with-bignum=gmp --with-scalar=64bit --with-field=64bit --with-asm=x86_64 
@@ -115,8 +115,3 @@ https://web.northeastern.edu/seigen/11Magic/KruskalsCount/PollardKangarooMonopol
 P. C. van Oorschot and M. J. Wiener, Parallel collision search with cryptanalytic applications, J. Cryptology, #12 (1999) 
 https://people.scs.carleton.ca/~paulv/papers/JoC97.pdf
 
-Pollard, kangaroo method, solving discrete logarithm problem (DLP) using pseudorandom walks, C99
-Its the kangaroo method (of [11, p. 13]) using distinguished points.
-Runtime expected of 2w^(1/2) group operations.
-
-[11] P. C. van Oorschot and M. J. Wiener, Parallel collision search with cryptanalytic applications, J. Cryptology, #12 (1999)
