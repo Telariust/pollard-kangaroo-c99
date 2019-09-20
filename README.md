@@ -14,7 +14,6 @@ Runtime expected of 2w<sup>1/2</sup> group operations.
 
 Expected in the future
  - multicore
- - ...?
 
 # Compilation
 
@@ -59,6 +58,7 @@ make LDFLAGS=" -no-undefined "
 
 # Benchmark libs
 Algo: 1 Tame + 1 Wild with distinguished points,  expected of 2w<sup>1/2</sup> group operations
+
 1core i5-2540, win7x64, algo A+A->A
 ```
 0.219Mk/s Mk/s
