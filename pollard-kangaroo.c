@@ -8,7 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef _SYS_TIME_H_
 #include <sys/time.h>
+#endif
+#ifndef _SYS_TIME_H_
+#include <time.h>
+#endif
+
 //#include <unistd.h>
 #include <math.h>
 
@@ -34,7 +40,7 @@ int pow2bits = 42;
 // 4: k*G->J, J+J->J, xJ->xA; 0.031Mk/s; secp256k1_ecmult_gen() + secp256k1_gej_add_var()
 
 
-unsigned char version[4+1] = "0.2";
+unsigned char version[4+1] = "0.21";
 
 int FLAG_DEBUG = 0;
 
@@ -396,12 +402,14 @@ int main(int argc, char **argv) {
 			// L
 			memset(buff_b32, 0, sizeof(buff_b32) );
 			if(!(strlen(buff_L)%2)){
-				for(int i=0; i<32 ; ++i){sscanf(&buff_L[2*i],"%02X",&buff_b32[i+((64-strlen(buff_L))/2)]);}
+				//for(int i=0; i<32 ; ++i){sscanf(&buff_L[2*i],"%02X",&buff_b32[i+((64-strlen(buff_L))/2)]);}
+				for(int i=0; i<32 ; ++i){sscanf(&buff_L[2*i],"%02hhX",&buff_b32[i+((64-strlen(buff_L))/2)]);}
 			}else{
 				memset(buff_02X, 0, sizeof(buff_02X) );
 				buff_02X[0] = 48; // zero in ascii
 				strcat(buff_02X, buff_L);
-				for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02X",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
+				//for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02X",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
+				for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02hhX",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
 			}
 			secp256k1_scalar_set_b32(&scalar_L, buff_b32, NULL);
 
@@ -419,12 +427,14 @@ int main(int argc, char **argv) {
 			// U
 			memset(buff_b32, 0, sizeof(buff_b32) );
 			if(!(strlen(buff_U)%2)){
-				for(int i=0; i<32 ; ++i){sscanf(&buff_U[2*i],"%02X",&buff_b32[i+((64-strlen(buff_U))/2)]);}
+				//for(int i=0; i<32 ; ++i){sscanf(&buff_U[2*i],"%02X",&buff_b32[i+((64-strlen(buff_U))/2)]);}
+				for(int i=0; i<32 ; ++i){sscanf(&buff_U[2*i],"%02hhX",&buff_b32[i+((64-strlen(buff_U))/2)]);}
 			}else{
 				memset(buff_02X, 0, sizeof(buff_02X) );
 				buff_02X[0] = 48; // zero in ascii
 				strcat(buff_02X, buff_U);
-				for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02X",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
+				//for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02X",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
+				for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02hhX",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
 			}
 			secp256k1_scalar_set_b32(&scalar_U, buff_b32, NULL);
 
@@ -568,7 +578,7 @@ int main(int argc, char **argv) {
 
 	printf("\n[jumpsize]	2^%u max", pow2Jmax);
 
-	printf("\n[DPsize]	%u (hashtable size)", maxDP);
+	printf("\n[DPsize]	%lu (hashtable size)", maxDP);
 	//printf("\n[DPmodule]	0x%016lX ", DPmodule);
 
 	#if	ALGO_CALC == 0 
@@ -595,7 +605,8 @@ int main(int argc, char **argv) {
 		if (strlen(argv[2])==2*33) LEN_PUBK = 33;
 		if (strlen(argv[2])==2*65) LEN_PUBK = 65;
 		printf("\n[i] custom pubkey#%i loaded from argv2 ", pow2bits);
-		for(int i=0; i<LEN_PUBK ; ++i){sscanf(&argv[2][2*i],"%02X",&new_pubkey[i]);}
+		//for(int i=0; i<LEN_PUBK ; ++i){sscanf(&argv[2][2*i],"%02X",&new_pubkey[i]);}
+		for(int i=0; i<LEN_PUBK ; ++i){sscanf(&argv[2][2*i],"%02hhX",&new_pubkey[i]);}
 		printf("\n[pubkey#%i] ", pow2bits);
 		for(int i=0; i<LEN_PUBK ; ++i){printf("%02X",new_pubkey[i]);}
 		memcpy(raw_pubkey, new_pubkey, LEN_PUBK );
@@ -991,7 +1002,7 @@ void secp256k1_ge_add_ge_var(secp256k1_ge *r, const secp256k1_ge *a, const secp2
 				if (FLAG_DEBUG>0)	printf("\n[tame][DP T+W=%lu+%lu=%lu] new distinguished point!\n", n_DT, n_DW, n_DT+n_DW);
 
 				if ( n_DT+n_DW >= maxDP ) { 
-							printf("\n[FATAL_ERROR] DP hashtable overflow! T+W=%u+%u=%u (max:%u)\n", n_DT, n_DW, n_DT+n_DW, maxDP);
+							printf("\n[FATAL_ERROR] DP hashtable overflow! T+W=%lu+%lu=%lu (max:%lu)\n", n_DT, n_DW, n_DT+n_DW, maxDP);
 							exit(EXIT_FAILURE);
 				}
 
@@ -1109,7 +1120,7 @@ void secp256k1_ge_add_ge_var(secp256k1_ge *r, const secp256k1_ge *a, const secp2
 				if (FLAG_DEBUG>0)	printf("\n[wild][DP T+W=%lu+%lu=%lu] new distinguished point!\n", n_DT, n_DW, n_DT+n_DW);
 
 				if ( n_DT+n_DW >= maxDP ) { 
-							printf("\n[FATAL_ERROR] DP hashtable overflow! T+W=%u+%u=%u (max:%u)\n", n_DT, n_DW, n_DT+n_DW, maxDP);
+							printf("\n[FATAL_ERROR] DP hashtable overflow! T+W=%lu+%lu=%lu (max:%lu)\n", n_DT, n_DW, n_DT+n_DW, maxDP);
 							exit(EXIT_FAILURE);
 				}
 
@@ -1201,7 +1212,7 @@ void secp256k1_ge_add_ge_var(secp256k1_ge *r, const secp256k1_ge *a, const secp2
 			if(timepass >= 1) {
 
 				//debug
-				if (FLAG_DEBUG>0) printf("\r[i] DP T+W=%lu+%lu=%lu; dp/kgr=%.1lf; HashTableCollisions=%u                  \n"
+				if (FLAG_DEBUG>0) printf("\r[i] DP T+W=%lu+%lu=%lu; dp/kgr=%.1lf; HashTableCollisions=%lu                  \n"
 					, n_DT,n_DW, n_DT+n_DW, (float)(n_DT+n_DW)/2, n_coll);
 
 
