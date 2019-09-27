@@ -14,6 +14,10 @@ Runtime expected of 2w<sup>1/2</sup> group operations.
 
 Expected in the future
  - multicore
+ - named argv
+ - timeit loop for avg
+ - heuristic prognosis (avg)time and (avg)jump per bits
+ - precision S(i) set without problem of odd of pow2
 
 # Compilation
 
