@@ -1,5 +1,5 @@
 /**********************************************************************
-  gcc -O2 -I secp256k1/src/ -I secp256k1/ pollard-kangaroo.c -lgmp -lm  -o pollard-kangaroo
+  gcc -std=c99 -O2 -I secp256k1/src/ -I secp256k1/ pollard-kangaroo.c -lgmp -lm  -o kang
  **********************************************************************/
 
 #include "libsecp256k1-config.h"
@@ -40,7 +40,7 @@ int pow2bits = 42;
 // 4: k*G->J, J+J->J, xJ->xA; 0.031Mk/s; secp256k1_ecmult_gen() + secp256k1_gej_add_var()
 
 
-unsigned char version[4+1] = "0.22";
+unsigned char version[4+1] = "0.23";
 
 int FLAG_DEBUG = 0;
 
@@ -289,8 +289,12 @@ unsigned char * prefSI(char *s, size_t max, double num){
 		prefSI_index += 1;
 		num /= 1000;
 	}
-	snprintf(&s[0], max, "%5.1lf", num);
-	snprintf(&s[0+5], max-5, "%c", prefSI_list[prefSI_index]); 
+	if(prefSI_index < sizeof(prefSI_list)/sizeof(prefSI_list[0])){
+		snprintf(&s[0], max, "%5.1lf", num);
+		snprintf(&s[0+5], max-5, "%c", prefSI_list[prefSI_index]); 
+	}else{
+		snprintf(&s[0], max, "infini");
+	}
 	return s;
 }
 
@@ -488,7 +492,8 @@ int main(int argc, char **argv) {
 
 	//bitMin,bitMax
 	if ( pow2W < 8 || pow2W > 130) {
-		printf("\n[error] bits must be 2^8..2^130!");
+		printf("\n");
+		printf("\n[FATAL_ERROR] bits must be 2^8..2^130!\n");
 		usage(argc, argv);
 	}
 	if (pow2W > 70) {
@@ -731,14 +736,8 @@ int main(int argc, char **argv) {
 		secp256k1_scalar distance;
 	} hashtb_entry;
 
-	#define ALLOC_ALIGN 1
 
-	#if !ALLOC_ALIGN
-	//hashtb_entry *DPht = (hashtb_entry *) malloc( HASH_SIZE * sizeof(struct hashtb_entry) );
 	hashtb_entry *DPht = (hashtb_entry *) calloc( HASH_SIZE, sizeof(struct hashtb_entry) );
-	#else
-	hashtb_entry *DPht = (hashtb_entry *) aligned_alloc( 4, HASH_SIZE * sizeof(struct hashtb_entry) ); //C11
-	#endif
 	if( NULL == DPht ){ 
 		printf("\n[memory] can't alloc mem %.2f %s", (float)(HASH_SIZE)*sizeof(struct hashtb_entry)/DIV_B/DIV_B/DIV_B, (DIV_B==1024?"GiB":"Gb") ); 
 		printf("\n[FATAL ERROR]\n");exit(EXIT_FAILURE);
