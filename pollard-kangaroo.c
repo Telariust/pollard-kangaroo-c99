@@ -1,5 +1,5 @@
 /**********************************************************************
-  gcc -O2 -I secp256k1/src/ -I secp256k1/ pollard-kangaroo.c -lgmp
+  gcc -O2 -I secp256k1/src/ -I secp256k1/ pollard-kangaroo.c -lgmp -lm  -o pollard-kangaroo
  **********************************************************************/
 
 #include "libsecp256k1-config.h"
@@ -40,14 +40,14 @@ int pow2bits = 42;
 // 4: k*G->J, J+J->J, xJ->xA; 0.031Mk/s; secp256k1_ecmult_gen() + secp256k1_gej_add_var()
 
 
-unsigned char version[4+1] = "0.21";
+unsigned char version[4+1] = "0.22";
 
 int FLAG_DEBUG = 0;
 
 unsigned char seed16[16+1] = {0};
 //unsigned char seed16[16+1] = "1234567890ABCDEF";
 
-// max elements in hashtable
+// max distinguished points in hashtable
 uint64_t maxDP = 1<<10; // 2^10=1024
 
 #define DIV_BYTE  1000
@@ -400,15 +400,13 @@ int main(int argc, char **argv) {
 			printf("\n[i] custom range loaded from argv1");
 
 			// L
-			memset(buff_b32, 0, sizeof(buff_b32) );
+			//memset(buff_b32, 0, sizeof(buff_b32) );
 			if(!(strlen(buff_L)%2)){
-				//for(int i=0; i<32 ; ++i){sscanf(&buff_L[2*i],"%02X",&buff_b32[i+((64-strlen(buff_L))/2)]);}
 				for(int i=0; i<32 ; ++i){sscanf(&buff_L[2*i],"%02hhX",&buff_b32[i+((64-strlen(buff_L))/2)]);}
 			}else{
-				memset(buff_02X, 0, sizeof(buff_02X) );
+				//memset(buff_02X, 0, sizeof(buff_02X) );
 				buff_02X[0] = 48; // zero in ascii
 				strcat(buff_02X, buff_L);
-				//for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02X",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
 				for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02hhX",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
 			}
 			secp256k1_scalar_set_b32(&scalar_L, buff_b32, NULL);
@@ -417,37 +415,31 @@ int main(int argc, char **argv) {
 			scalar_K = scalar_L;
 			for(int i = 0 ; i < 256; ++i ){
 				secp256k1_scalar_mul_shift_var(&scalar_K, &scalar_K, &scalar_1, (unsigned int) 1 );
-				secp256k1_scalar_get_b32(buff_b32, &scalar_K);
 				pow2L = i+0;
 				if (secp256k1_scalar_is_one(&scalar_K)) break;
 			}
-			secp256k1_scalar_get_b32(buff_b32, &scalar_L);
 			printf("\n[L] (~2^%i) 0x", pow2L);for(int i=0; i<32 ; ++i){printf("%02X", buff_b32[i]);}
 
 			// U
-			memset(buff_b32, 0, sizeof(buff_b32) );
+			//memset(buff_b32, 0, sizeof(buff_b32) );
 			if(!(strlen(buff_U)%2)){
-				//for(int i=0; i<32 ; ++i){sscanf(&buff_U[2*i],"%02X",&buff_b32[i+((64-strlen(buff_U))/2)]);}
 				for(int i=0; i<32 ; ++i){sscanf(&buff_U[2*i],"%02hhX",&buff_b32[i+((64-strlen(buff_U))/2)]);}
 			}else{
-				memset(buff_02X, 0, sizeof(buff_02X) );
+				//memset(buff_02X, 0, sizeof(buff_02X) );
 				buff_02X[0] = 48; // zero in ascii
 				strcat(buff_02X, buff_U);
-				//for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02X",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
 				for(int i=0; i<32 ; ++i){sscanf(&buff_02X[2*i],"%02hhX",&buff_b32[i+((64-strlen(buff_02X))/2)]);}
 			}
 			secp256k1_scalar_set_b32(&scalar_U, buff_b32, NULL);
 
 			// pow2U
-			//scalar_K = scalar_U;
-			//for(int i = 0 ; i < 256; ++i ){
-			//	secp256k1_scalar_mul_shift_var(&scalar_K, &scalar_K, &scalar_1, (unsigned int) 1 );
-			//	secp256k1_scalar_get_b32(buff_b32, &scalar_K);
-			//	pow2U = i+1;
-			//	if (secp256k1_scalar_is_one(&scalar_K)) break;
-			//}
-			pow2U = pow2L+1;
-			secp256k1_scalar_get_b32(buff_b32, &scalar_U);
+			scalar_K = scalar_U;
+			for(int i = 0 ; i < 256; ++i ){
+				secp256k1_scalar_mul_shift_var(&scalar_K, &scalar_K, &scalar_1, (unsigned int) 1 );
+				pow2U = i+1;
+				if (secp256k1_scalar_is_one(&scalar_K)) break;
+			}
+			if(pow2U == pow2L) pow2U = pow2L+1;
 			printf("\n[U] (~2^%i) 0x", pow2U);for(int i=0; i<32 ; ++i){printf("%02X", buff_b32[i]);}
 
 			// W = U - L
@@ -458,7 +450,6 @@ int main(int argc, char **argv) {
 			scalar_K = scalar_W;
 			for(int i = 0 ; i < 256; ++i ){
 				secp256k1_scalar_mul_shift_var(&scalar_K, &scalar_K, &scalar_1, (unsigned int) 1 );
-				secp256k1_scalar_get_b32(buff_b32, &scalar_K);
 				pow2W = i+1;
 				if (secp256k1_scalar_is_one(&scalar_K)) break;
 			}
@@ -605,7 +596,6 @@ int main(int argc, char **argv) {
 		if (strlen(argv[2])==2*33) LEN_PUBK = 33;
 		if (strlen(argv[2])==2*65) LEN_PUBK = 65;
 		printf("\n[i] custom pubkey#%i loaded from argv2 ", pow2bits);
-		//for(int i=0; i<LEN_PUBK ; ++i){sscanf(&argv[2][2*i],"%02X",&new_pubkey[i]);}
 		for(int i=0; i<LEN_PUBK ; ++i){sscanf(&argv[2][2*i],"%02hhX",&new_pubkey[i]);}
 		printf("\n[pubkey#%i] ", pow2bits);
 		for(int i=0; i<LEN_PUBK ; ++i){printf("%02X",new_pubkey[i]);}
